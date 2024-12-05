@@ -1,0 +1,80 @@
+select * from data_set;
+
+--Pro vypracování použito PostGre a editor DataGrip
+
+--1. Napište dotaz SQL pro získání celkového počtu objednávek v souboru dat.
+select count(order_id)
+from data_set;
+--Výsledkem je 400 objednávek.
+
+--2. Napište dotaz SQL, který vypočítá celkové příjmy společnosti z těchto objednávek.
+select sum(total_price)
+from data_set;
+--Výsledkem je 29 324. Bohuže není známa měna.
+
+--3. Napište dotaz SQL, který vyhledá 5 nejprodávanějších výrobků (podle názvu výrobku) s nejvyšším celkovým množstvím prodeje.
+select product_name, sum(quantity) as total_quantity
+from data_set
+group by product_name
+order by total_quantity desc
+limit 5;
+--Výsledek: Jeans (137), Shirt (128), Dress (124), T-Shirt (112), Pants (88).
+
+--4. Napište dotaz SQL na vyhledání zákazníka (podle customer_id), který provedl nejvíce nákupů (tj. nejvyšší celkový počet objednávek).
+select customer_id, count(order_id) as total_orders
+from data_set
+group by customer_id
+order by total_orders desc;
+--Nejvíce objednávek provedl zákazník s ID CUST001 a CUST002. Oba mají po 3 objednávkách.
+
+--5. Napište dotaz SQL pro výpočet průměrné jednotkové ceny výrobků.
+--výpočet pro průměrnou jednotkovou cenu všech výrobků dohromady (ze zadání není úplně jasné, jestli je  to pro všechny dohromady, nebo zvlášť).
+select avg(unit_price)
+from data_set;
+--výsledek je 32,115
+
+--výpočet pro jednotlivé výrobky
+select product_name, avg(unit_price) as average_price
+from data_set
+group by product_name
+order by average_price desc;
+--zde se od jednotkové ceny liší jen jeans.
+
+--6. Napište dotaz SQL, který najde datum s nejvyššími celkovými tržbami.
+select order_date, sum(total_price) as sales
+from data_set
+group by order_date
+order by sales desc;
+--Nejvyšší tržby byly 19.10.2023, 8.10.2023 a 27.9.2023. V těchto dnech je tržba 235.
+
+--7. Napište dotaz SQL pro vyhledání výrobku, který má nejvyšší jednotkovou cenu.
+select product_name, unit_price
+from data_set
+order by unit_price desc;
+--Nejvyšší jednotkovou cenu má položka Suit, celkem  za 120.
+
+--8. Napište dotaz SQL pro získání kumulativní tržby po měsících.
+--výpočet pro měsíce v jednotlivých letech
+select extract(year from order_date) as year,
+       extract(month from order_date) as month,
+       sum(total_price) as sales
+from data_set
+group by year, month
+order by year desc,  month desc;
+--výsledek viz vygenerovaná tabulka
+
+--výpočet pro měsíce souhrnně (nezohledňuje roky, v zadání je jen po měsících, tak jsem to raději udělala), ale je to zkreslující výsledek.
+select extract(month from order_date) as month,
+       sum(total_price) as sales
+from data_set
+group by month
+order by sales desc;
+
+--zde ještě s funkcí rollup (ukazuje výsledky souhrnně za celý rok a pak za jednotlivé měsíce. Takový pokus navíc.
+select extract(year from order_date) as year,
+       extract(month from order_date) as month,
+       sum(total_price) as sales
+from data_set
+group by
+    rollup(year, month)
+order by year desc,  month desc;
